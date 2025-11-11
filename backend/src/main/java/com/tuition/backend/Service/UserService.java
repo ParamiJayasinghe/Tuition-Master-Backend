@@ -4,16 +4,21 @@ import com.tuition.backend.Entity.User;
 import com.tuition.backend.Repository.userRepository;
 import com.tuition.backend.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+
 
 @Service
 public class UserService {
 
     @Autowired
     private userRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public User createUser(UserDto userDTO) {
         // Check for duplicates
@@ -27,9 +32,9 @@ public class UserService {
         // Create user entity
         User user = new User();
         user.setUsername(userDTO.getUsername());
-        user.setPassword(userDTO.getPassword()); // Later: encode password
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         user.setEmail(userDTO.getEmail());
-        user.setRole(userDTO.getRole());
+        user.setRole(userDTO.getRole() != null ? userDTO.getRole().toUpperCase() : null);
         user.setIsActive(true);
 
         return userRepository.save(user);
@@ -71,12 +76,12 @@ public class UserService {
 
         // Update password if provided (remember to encode later)
         if (userDTO.getPassword() != null) {
-            existing.setPassword(userDTO.getPassword());
+            existing.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         }
 
         // Update role if provided
         if (userDTO.getRole() != null) {
-            existing.setRole(userDTO.getRole());
+            existing.setRole(userDTO.getRole().toUpperCase());
         }
 
         // Optionally update isActive via DTO (if you add it). For now we leave it as-is.

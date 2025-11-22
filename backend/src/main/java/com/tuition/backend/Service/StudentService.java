@@ -9,6 +9,8 @@ import com.tuition.backend.Repository.userRepository;
 import com.tuition.backend.dto.StudentDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,7 @@ public class StudentService {
     @PreAuthorize("hasRole('TEACHER')")
     @Transactional
     public Student createStudent(StudentDto dto) {
+
         if (dto.getStudentId() == null || dto.getStudentId().trim().isEmpty()) {
             throw new RuntimeException("studentId is required");
         }
@@ -43,21 +46,21 @@ public class StudentService {
         }
 
         User linkedUser = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new RuntimeException("Linked user not found with id: " + dto.getUserId()));
+                .orElseThrow(() ->
+                        new RuntimeException("Linked user not found with id: " + dto.getUserId()));
+
         linkedUser.setRole("STUDENT");
         linkedUser.setIsActive(true);
         userRepository.save(linkedUser);
 
-        // Get the currently authenticated TEACHER
-        User currentUser = userRepository.findByUsername(
-                org.springframework.security.core.context.SecurityContextHolder
-                        .getContext()
-                        .getAuthentication()
-                        .getName()
-        ).orElseThrow(() -> new RuntimeException("Current user not found"));
+        // Get current authenticated TEACHER
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
 
         Teacher createdByTeacher = teacherRepository.findAll().stream()
-                .filter(t -> t.getUser() != null && t.getUser().getId().equals(currentUser.getId()))
+                .filter(t -> t.getUser() != null &&
+                        t.getUser().getId().equals(currentUser.getId()))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Teacher profile not found for current user"));
 
@@ -76,15 +79,15 @@ public class StudentService {
     }
 
     /**
-     * Get all students: accessible by any authenticated user
+     * Get all students: any authenticated user
      */
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('TEACHER')")
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
     }
 
     /**
-     * Get a student by ID: accessible by any authenticated user
+     * Get a student by ID: any authenticated user
      */
     @PreAuthorize("isAuthenticated()")
     public Student getStudentById(Long id) {
@@ -93,25 +96,23 @@ public class StudentService {
     }
 
     /**
-     * Update student: Only TEACHER (creator) or ADMIN can update
+     * Update student: Only TEACHER (creator) or ADMIN
      */
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TEACHER')")
     @Transactional
     public Student updateStudent(Long id, StudentDto dto) {
+
         Student existing = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found with id: " + id));
 
-        User currentUser = userRepository.findByUsername(
-                org.springframework.security.core.context.SecurityContextHolder
-                        .getContext()
-                        .getAuthentication()
-                        .getName()
-        ).orElseThrow(() -> new RuntimeException("Current user not found"));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
 
         boolean isAdmin = "ADMIN".equalsIgnoreCase(currentUser.getRole());
-        boolean isCreatorTeacher = existing.getCreatedBy() != null
-                && existing.getCreatedBy().getUser() != null
-                && existing.getCreatedBy().getUser().getId().equals(currentUser.getId());
+        boolean isCreatorTeacher = existing.getCreatedBy() != null &&
+                existing.getCreatedBy().getUser() != null &&
+                existing.getCreatedBy().getUser().getId().equals(currentUser.getId());
 
         if (!isAdmin && !isCreatorTeacher) {
             throw new RuntimeException("Not authorized to update this student");
@@ -137,7 +138,8 @@ public class StudentService {
 
         if (dto.getUserId() != null && isAdmin) {
             User newLinkedUser = userRepository.findById(dto.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Linked user not found with id: " + dto.getUserId()));
+                    .orElseThrow(() ->
+                            new RuntimeException("Linked user not found with id: " + dto.getUserId()));
             newLinkedUser.setRole("STUDENT");
             userRepository.save(newLinkedUser);
             existing.setUser(newLinkedUser);
@@ -153,7 +155,8 @@ public class StudentService {
     @Transactional
     public void deleteStudent(Long id) {
         Student existing = studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + id));
+                .orElseThrow(() ->
+                        new RuntimeException("Student not found with id: " + id));
         studentRepository.deleteById(id);
     }
 }

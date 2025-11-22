@@ -1,9 +1,11 @@
 package com.tuition.backend.Controller;
+
 import com.tuition.backend.Entity.Teacher;
 import com.tuition.backend.Service.TeacherService;
 import com.tuition.backend.dto.TeacherDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,35 +17,33 @@ public class TeacherController {
     @Autowired
     private TeacherService teacherService;
 
-    // Create a teacher (only ADMIN allowed; service enforces)
+    // Only ADMIN can create
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Teacher> createTeacher(@RequestBody TeacherDto dto) {
-        Teacher created = teacherService.createTeacher(dto);
-        return ResponseEntity.ok(created);
+        return ResponseEntity.ok(teacherService.createTeacher(dto));
     }
 
-    // Get all teachers
+    // Anyone authenticated can view
     @GetMapping
     public ResponseEntity<List<Teacher>> getAllTeachers() {
-        List<Teacher> list = teacherService.getAllTeachers();
-        return ResponseEntity.ok(list);
+        return ResponseEntity.ok(teacherService.getAllTeachers());
     }
 
-    // Get teacher by id
     @GetMapping("/{id}")
     public ResponseEntity<Teacher> getTeacherById(@PathVariable Long id) {
-        Teacher t = teacherService.getTeacherById(id);
-        return ResponseEntity.ok(t);
+        return ResponseEntity.ok(teacherService.getTeacherById(id));
     }
 
-    // Update teacher (ADMIN or the teacher themselves)
+    // Admin or teacher themselves
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     @PutMapping("/{id}")
     public ResponseEntity<Teacher> updateTeacher(@PathVariable Long id, @RequestBody TeacherDto dto) {
-        Teacher updated = teacherService.updateTeacher(id, dto);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(teacherService.updateTeacher(id, dto));
     }
 
-    // Delete teacher (only ADMIN)
+    // Only ADMIN
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTeacher(@PathVariable Long id) {
         teacherService.deleteTeacher(id);

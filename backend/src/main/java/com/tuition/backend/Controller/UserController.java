@@ -17,22 +17,19 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody UserDto userDTO) {
-        User createdUser = userService.createUser(userDTO);
-        return ResponseEntity.ok(createdUser);
+    public ResponseEntity<User> createUser(@RequestBody UserDto dto) {
+        User created = userService.createUser(dto);
+        return ResponseEntity.ok(created);
     }
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    // Get user by id
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        User user = userService.getUserById(id);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<User> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     // Update user

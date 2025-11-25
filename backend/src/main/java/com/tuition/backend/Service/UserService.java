@@ -1,11 +1,18 @@
 package com.tuition.backend.Service;
 
+import com.tuition.backend.Entity.Student;
+import com.tuition.backend.Entity.Teacher;
 import com.tuition.backend.Entity.User;
 import com.tuition.backend.Repository.userRepository;
+import com.tuition.backend.Repository.TeacherRepository;
+import com.tuition.backend.Repository.StudentRepository;
+import com.tuition.backend.Service.AuthService;
 import com.tuition.backend.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -18,28 +25,72 @@ public class UserService {
     private userRepository userRepository;
 
     @Autowired
+    private TeacherRepository teacherRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public User createUser(UserDto userDTO) {
-        // Check for duplicates
-        if (userRepository.existsByUsername(userDTO.getUsername())) {
-            throw new RuntimeException("Username already exists");
-        }
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
-            throw new RuntimeException("Email already exists");
+    @Autowired
+    private AuthService authService;
+
+    @Transactional
+
+    public User createUser(UserDto dto) {
+
+        String requesterRole = authService.getCurrentUserRole();
+
+        // ROLE ENFORCEMENT
+        if (dto.getRole().equalsIgnoreCase("TEACHER") && !requesterRole.equals("ADMIN")) {
+            throw new RuntimeException("Only ADMIN can create teachers");
         }
 
-        // Create user entity
+        if (dto.getRole().equalsIgnoreCase("STUDENT") &&
+                !(requesterRole.equals("ADMIN") || requesterRole.equals("TEACHER"))) {
+            throw new RuntimeException("Only ADMIN or TEACHER can create students");
+        }
+
+        // Create base user
         User user = new User();
-        user.setUsername(userDTO.getUsername());
-        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        user.setEmail(userDTO.getEmail());
-        user.setRole(userDTO.getRole() != null ? userDTO.getRole().toUpperCase() : null);
+        user.setUsername(dto.getUsername());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setEmail(dto.getEmail());
+        user.setRole(dto.getRole());
         user.setIsActive(true);
 
-        return userRepository.save(user);
-    }
+        User savedUser = userRepository.save(user);
 
+        // Create teacher
+        if (dto.getRole().equals("TEACHER")) {
+            Teacher t = new Teacher();
+            t.setSubjects(dto.getTeacherDetails().getSubjects());
+            t.setContactNumber(dto.getTeacherDetails().getContactNumber());
+            t.setFullName(dto.getTeacherDetails().getFullName());
+            t.setNicNumber(dto.getTeacherDetails().getNicNumber());
+            t.setTeacherId(dto.getTeacherDetails().getTeacherId());
+            t.setGender(dto.getTeacherDetails().getGender());
+            t.setUser(savedUser);
+            teacherRepository.save(t);
+        }
+
+        // Create student
+        if (dto.getRole().equals("STUDENT")) {
+            Student s = new Student();
+            s.setContactNumber(dto.getStudentDetails().getContactNumber());
+            s.setFullName(dto.getStudentDetails().getFullName());
+            s.setStudentId(dto.getStudentDetails().getStudentId());
+            s.setSubjects(dto.getStudentDetails().getSubjects());
+            s.setDateOfBirth(dto.getStudentDetails().getDateOfBirth());
+            s.setAddress(dto.getStudentDetails().getAddress());
+            s.setGender(dto.getStudentDetails().getGender());
+            s.setUser(savedUser);
+            studentRepository.save(s);
+        }
+
+        return savedUser;
+    }
     // Get all users
     public List<User> getAllUsers() {
         return userRepository.findAll();

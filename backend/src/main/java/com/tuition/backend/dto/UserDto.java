@@ -1,3 +1,47 @@
+//package com.tuition.backend.dto;
+//
+//public class UserDto {
+//
+//    private String username;
+//    private String password;
+//    private String email;
+//    private String role;
+//
+//    // Getters and Setters
+//    public String getUsername() {
+//        return username;
+//    }
+//
+//    public void setUsername(String username) {
+//        this.username = username;
+//    }
+//
+//    public String getPassword() {
+//        return password;
+//    }
+//
+//    public void setPassword(String password) {
+//        this.password = password;
+//    }
+//
+//    public String getEmail() {
+//        return email;
+//    }
+//
+//    public void setEmail(String email) {
+//        this.email = email;
+//    }
+//
+//    public String getRole() {
+//        return role;
+//    }
+//
+//    public void setRole(String role) {
+//        this.role = role;
+//    }
+//}
+
+
 package com.tuition.backend.dto;
 
 public class UserDto {
@@ -5,38 +49,27 @@ public class UserDto {
     private String username;
     private String password;
     private String email;
-    private String role;
+    private String role; // ADMIN, TEACHER, STUDENT
 
-    // Getters and Setters
-    public String getUsername() {
-        return username;
-    }
+    private TeacherDto teacherDetails;
+    private StudentDto studentDetails;
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    // Getters & setters
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
-    public String getPassword() {
-        return password;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role.toUpperCase(); }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public TeacherDto getTeacherDetails() { return teacherDetails; }
+    public void setTeacherDetails(TeacherDto teacherDetails) { this.teacherDetails = teacherDetails; }
 
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
+    public StudentDto getStudentDetails() { return studentDetails; }
+    public void setStudentDetails(StudentDto studentDetails) { this.studentDetails = studentDetails; }
 }

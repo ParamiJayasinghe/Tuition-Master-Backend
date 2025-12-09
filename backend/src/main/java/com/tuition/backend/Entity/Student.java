@@ -39,7 +39,7 @@ public class Student {
 
     @ManyToOne
     @JoinColumn(name = "created_by", referencedColumnName = "id")
-    private User createdBy;
+    private Teacher createdBy;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -123,11 +123,11 @@ public class Student {
         this.address = address;
     }
 
-    public User getCreatedBy() {
+    public Teacher getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(User createdBy) {
+    public void setCreatedBy(Teacher createdBy) {
         this.createdBy = createdBy;
     }
 

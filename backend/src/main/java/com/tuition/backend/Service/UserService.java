@@ -88,7 +88,17 @@ public class UserService {
             String currentUsername = authService.getCurrentUsername();
             User creator = userRepository.findByUsername(currentUsername)
                     .orElseThrow(() -> new RuntimeException("Current user not found"));
-            s.setCreatedBy(creator);
+            
+            // If creator is TEACHER, link the Teacher entity
+            if ("TEACHER".equalsIgnoreCase(creator.getRole())) {
+                 Teacher teacher = teacherRepository.findByUser(creator)
+                         .orElseThrow(() -> new RuntimeException("Teacher profile not found for current user"));
+                 s.setCreatedBy(teacher);
+            }
+            // If ADMIN creates student, createdBy can be null or we need logic. 
+            // Requirement says "record the user ID of the teacher who created". 
+            // If Admin creates, maybe null is fine or not applicable. 
+            // For now, only linking if creator is Teacher.
 
             s.setUser(savedUser);
             studentRepository.save(s);
@@ -98,19 +108,67 @@ public class UserService {
     }
     // Get all users
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        String requesterRole = authService.getCurrentUserRole();
+        String currentUsername = authService.getCurrentUsername();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+        if ("ADMIN".equalsIgnoreCase(requesterRole)) {
+            return userRepository.findAll();
+        } else if ("TEACHER".equalsIgnoreCase(requesterRole)) {
+            // Find the Teacher entity for this user
+            Optional<Teacher> teacherOpt = teacherRepository.findByUser(currentUser);
+            if (teacherOpt.isEmpty()) {
+                return java.util.Collections.emptyList();
+            }
+            List<Student> students = studentRepository.findAllByCreatedBy(teacherOpt.get());
+            return students.stream().map(Student::getUser).toList();
+        } else {
+            // Students or others see nothing (or maybe their own profile, but requirement implies teacher/admin focus)
+            return java.util.Collections.emptyList();
+        }
     }
 
     // Get user by id
     public User getUserById(Long id) {
+        // Optional: Add permission check here too if needed, but user emphasized list/update/delete
         Optional<User> optionalUser = userRepository.findById(id);
         return optionalUser.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
 
     // Update user
+    @Transactional
     public User updateUser(Long id, UserDto userDTO) {
         User existing = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        String requesterRole = authService.getCurrentUserRole();
+        String currentUsername = authService.getCurrentUsername();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+        // Permission Check
+        if ("TEACHER".equalsIgnoreCase(existing.getRole())) {
+            if (!"ADMIN".equalsIgnoreCase(requesterRole)) {
+                throw new RuntimeException("Only ADMIN can update teachers");
+            }
+        } else if ("STUDENT".equalsIgnoreCase(existing.getRole())) {
+            boolean isAdmin = "ADMIN".equalsIgnoreCase(requesterRole);
+            boolean isCreator = false;
+            // Check if creator
+            Optional<Student> studentOpt = studentRepository.findByUser(existing);
+            if (studentOpt.isPresent()) {
+                Student s = studentOpt.get();
+                // Check if createdBy (Teacher) is linked to currentUser
+                if (s.getCreatedBy() != null && s.getCreatedBy().getUser().getId().equals(currentUser.getId())) {
+                    isCreator = true;
+                }
+            }
+            
+            if (!isAdmin && !isCreator) {
+                throw new RuntimeException("Not authorized to update this student");
+            }
+        }
 
         // If username changed, ensure uniqueness
         String newUsername = userDTO.getUsername();
@@ -130,26 +188,83 @@ public class UserService {
             existing.setEmail(newEmail);
         }
 
-        // Update password if provided (remember to encode later)
-        if (userDTO.getPassword() != null) {
+        // Update password if provided
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
             existing.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         }
 
-        // Update role if provided
+        // Update role if provided (Only ADMIN should probably do this, but keeping flexible as per existing)
         if (userDTO.getRole() != null) {
+             // Maybe restrict role change? For now leaving as is but ensuring case
             existing.setRole(userDTO.getRole().toUpperCase());
         }
+        
+        User savedUser = userRepository.save(existing);
 
-        // Optionally update isActive via DTO (if you add it). For now we leave it as-is.
+        // Update details if provided
+        if ("TEACHER".equalsIgnoreCase(existing.getRole()) && userDTO.getTeacherDetails() != null) {
+            Optional<Teacher> teacherOpt = teacherRepository.findByUser(existing);
+            if (teacherOpt.isPresent()) {
+                Teacher t = teacherOpt.get();
+                if(userDTO.getTeacherDetails().getFullName() != null) t.setFullName(userDTO.getTeacherDetails().getFullName());
+                if(userDTO.getTeacherDetails().getContactNumber() != null) t.setContactNumber(userDTO.getTeacherDetails().getContactNumber());
+                if(userDTO.getTeacherDetails().getSubjects() != null) t.setSubjects(userDTO.getTeacherDetails().getSubjects());
+                if(userDTO.getTeacherDetails().getNicNumber() != null) t.setNicNumber(userDTO.getTeacherDetails().getNicNumber());
+                if(userDTO.getTeacherDetails().getTeacherId() != null) t.setTeacherId(userDTO.getTeacherDetails().getTeacherId());
+                if(userDTO.getTeacherDetails().getGender() != null) t.setGender(userDTO.getTeacherDetails().getGender());
+                teacherRepository.save(t);
+            }
+        } else if ("STUDENT".equalsIgnoreCase(existing.getRole()) && userDTO.getStudentDetails() != null) {
+            Optional<Student> studentOpt = studentRepository.findByUser(existing);
+            if (studentOpt.isPresent()) {
+                Student s = studentOpt.get();
+                if(userDTO.getStudentDetails().getFullName() != null) s.setFullName(userDTO.getStudentDetails().getFullName());
+                if(userDTO.getStudentDetails().getContactNumber() != null) s.setContactNumber(userDTO.getStudentDetails().getContactNumber());
+                if(userDTO.getStudentDetails().getSubjects() != null) s.setSubjects(userDTO.getStudentDetails().getSubjects());
+                if(userDTO.getStudentDetails().getStudentId() != null) s.setStudentId(userDTO.getStudentDetails().getStudentId());
+                if(userDTO.getStudentDetails().getGender() != null) s.setGender(userDTO.getStudentDetails().getGender());
+                if(userDTO.getStudentDetails().getDateOfBirth() != null) s.setDateOfBirth(userDTO.getStudentDetails().getDateOfBirth());
+                if(userDTO.getStudentDetails().getAddress() != null) s.setAddress(userDTO.getStudentDetails().getAddress());
+                studentRepository.save(s);
+            }
+        }
 
-        return userRepository.save(existing);
+        return savedUser;
     }
 
     // Delete user (hard delete)
+    @Transactional
     public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found with id: " + id);
+        User existing = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        String requesterRole = authService.getCurrentUserRole();
+        String currentUsername = authService.getCurrentUsername();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+        // Permission Check
+        if ("TEACHER".equalsIgnoreCase(existing.getRole())) {
+            if (!"ADMIN".equalsIgnoreCase(requesterRole)) {
+                throw new RuntimeException("Only ADMIN can delete teachers");
+            }
+        } else if ("STUDENT".equalsIgnoreCase(existing.getRole())) {
+            boolean isAdmin = "ADMIN".equalsIgnoreCase(requesterRole);
+            boolean isCreator = false;
+            // Check if creator
+            Optional<Student> studentOpt = studentRepository.findByUser(existing);
+            if (studentOpt.isPresent()) {
+                Student s = studentOpt.get();
+                if (s.getCreatedBy() != null && s.getCreatedBy().getUser().getId().equals(currentUser.getId())) {
+                    isCreator = true;
+                }
+            }
+            
+            if (!isAdmin && !isCreator) {
+                throw new RuntimeException("Not authorized to delete this student");
+            }
         }
+
         userRepository.deleteById(id);
     }
 }

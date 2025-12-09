@@ -47,9 +47,8 @@ public class UserService {
             throw new RuntimeException("Only ADMIN can create teachers");
         }
 
-        if (dto.getRole().equalsIgnoreCase("STUDENT") &&
-                !(requesterRole.equals("ADMIN") || requesterRole.equals("TEACHER"))) {
-            throw new RuntimeException("Only ADMIN or TEACHER can create students");
+        if (dto.getRole().equalsIgnoreCase("STUDENT") && !requesterRole.equals("TEACHER")) {
+            throw new RuntimeException("Only TEACHER can create students");
         }
 
         // Create base user
@@ -72,6 +71,13 @@ public class UserService {
             t.setTeacherId(dto.getTeacherDetails().getTeacherId());
             t.setGender(dto.getTeacherDetails().getGender());
             t.setUser(savedUser);
+            
+            // Set createdBy (Admin)
+            String currentUsername = authService.getCurrentUsername();
+            User creator = userRepository.findByUsername(currentUsername)
+                    .orElseThrow(() -> new RuntimeException("Current user not found"));
+            t.setCreatedBy(creator);
+            
             teacherRepository.save(t);
         }
 
@@ -114,7 +120,10 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
         if ("ADMIN".equalsIgnoreCase(requesterRole)) {
-            return userRepository.findAll();
+            // Admin sees only Teachers
+            return userRepository.findAll().stream()
+                    .filter(u -> "TEACHER".equalsIgnoreCase(u.getRole()))
+                    .toList();
         } else if ("TEACHER".equalsIgnoreCase(requesterRole)) {
             // Find the Teacher entity for this user
             Optional<Teacher> teacherOpt = teacherRepository.findByUser(currentUser);
@@ -153,7 +162,11 @@ public class UserService {
                 throw new RuntimeException("Only ADMIN can update teachers");
             }
         } else if ("STUDENT".equalsIgnoreCase(existing.getRole())) {
-            boolean isAdmin = "ADMIN".equalsIgnoreCase(requesterRole);
+            // Admin cannot update students anymore
+            if ("ADMIN".equalsIgnoreCase(requesterRole)) {
+                throw new RuntimeException("ADMIN cannot update students");
+            }
+            
             boolean isCreator = false;
             // Check if creator
             Optional<Student> studentOpt = studentRepository.findByUser(existing);
@@ -165,7 +178,7 @@ public class UserService {
                 }
             }
             
-            if (!isAdmin && !isCreator) {
+            if (!isCreator) {
                 throw new RuntimeException("Not authorized to update this student");
             }
         }
@@ -249,7 +262,11 @@ public class UserService {
                 throw new RuntimeException("Only ADMIN can delete teachers");
             }
         } else if ("STUDENT".equalsIgnoreCase(existing.getRole())) {
-            boolean isAdmin = "ADMIN".equalsIgnoreCase(requesterRole);
+            // Admin cannot delete students anymore
+            if ("ADMIN".equalsIgnoreCase(requesterRole)) {
+                 throw new RuntimeException("ADMIN cannot delete students");
+            }
+
             boolean isCreator = false;
             // Check if creator
             Optional<Student> studentOpt = studentRepository.findByUser(existing);
@@ -260,7 +277,7 @@ public class UserService {
                 }
             }
             
-            if (!isAdmin && !isCreator) {
+            if (!isCreator) {
                 throw new RuntimeException("Not authorized to delete this student");
             }
         }

@@ -33,6 +33,10 @@ public class Teacher {
     @Column(length = 10)
     private String gender; // Male, Female, Other
 
+    @ManyToOne
+    @JoinColumn(name = "created_by", referencedColumnName = "id")
+    private User createdBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -105,6 +109,14 @@ public class Teacher {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
     }
 
     public LocalDateTime getCreatedAt() {

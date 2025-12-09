@@ -58,12 +58,7 @@ public class StudentService {
         User currentUser = userRepository.findByUsername(auth.getName())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
-        Teacher createdByTeacher = teacherRepository.findAll().stream()
-                .filter(t -> t.getUser() != null &&
-                        t.getUser().getId().equals(currentUser.getId()))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Teacher profile not found for current user"));
-
+        // Use currentUser directly as createdBy
         Student s = new Student();
         s.setUser(linkedUser);
         s.setFullName(dto.getFullName());
@@ -73,7 +68,7 @@ public class StudentService {
         s.setGender(dto.getGender());
         s.setDateOfBirth(dto.getDateOfBirth());
         s.setAddress(dto.getAddress());
-        s.setCreatedBy(createdByTeacher);
+        s.setCreatedBy(currentUser);
 
         return studentRepository.save(s);
     }
@@ -111,8 +106,7 @@ public class StudentService {
 
         boolean isAdmin = "ADMIN".equalsIgnoreCase(currentUser.getRole());
         boolean isCreatorTeacher = existing.getCreatedBy() != null &&
-                existing.getCreatedBy().getUser() != null &&
-                existing.getCreatedBy().getUser().getId().equals(currentUser.getId());
+                existing.getCreatedBy().getId().equals(currentUser.getId());
 
         if (!isAdmin && !isCreatorTeacher) {
             throw new RuntimeException("Not authorized to update this student");

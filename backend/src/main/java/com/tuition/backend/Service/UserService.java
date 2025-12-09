@@ -85,6 +85,11 @@ public class UserService {
             s.setDateOfBirth(dto.getStudentDetails().getDateOfBirth());
             s.setAddress(dto.getStudentDetails().getAddress());
             s.setGender(dto.getStudentDetails().getGender());
+            String currentUsername = authService.getCurrentUsername();
+            User creator = userRepository.findByUsername(currentUsername)
+                    .orElseThrow(() -> new RuntimeException("Current user not found"));
+            s.setCreatedBy(creator);
+
             s.setUser(savedUser);
             studentRepository.save(s);
         }

@@ -34,7 +34,31 @@ public class User {
         createdAt = LocalDateTime.now();
     }
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonManagedReference
+    private Teacher teacherDetails;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonManagedReference
+    private Student studentDetails;
+
     // Getters and Setters
+
+    public Teacher getTeacherDetails() {
+        return teacherDetails;
+    }
+
+    public void setTeacherDetails(Teacher teacherDetails) {
+        this.teacherDetails = teacherDetails;
+    }
+
+    public Student getStudentDetails() {
+        return studentDetails;
+    }
+
+    public void setStudentDetails(Student studentDetails) {
+        this.studentDetails = studentDetails;
+    }
 
     public Long getId() {
         return id;

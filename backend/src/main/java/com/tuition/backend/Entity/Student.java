@@ -14,6 +14,7 @@ public class Student {
 
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", unique = true)
+    @com.fasterxml.jackson.annotation.JsonBackReference
     private User user;
 
     @Column(name = "full_name", nullable = false, length = 100)

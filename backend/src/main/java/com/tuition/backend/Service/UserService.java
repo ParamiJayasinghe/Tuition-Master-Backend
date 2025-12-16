@@ -88,6 +88,7 @@ public class UserService {
             s.setFullName(dto.getStudentDetails().getFullName());
             s.setStudentId(dto.getStudentDetails().getStudentId());
             s.setSubjects(dto.getStudentDetails().getSubjects());
+            s.setGrade(dto.getStudentDetails().getGrade());
             s.setDateOfBirth(dto.getStudentDetails().getDateOfBirth());
             s.setAddress(dto.getStudentDetails().getAddress());
             s.setGender(dto.getStudentDetails().getGender());

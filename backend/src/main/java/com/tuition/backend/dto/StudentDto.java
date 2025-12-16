@@ -11,6 +11,7 @@ public class StudentDto {
     private String contactNumber;
     private String studentId;         // unique student identifier
     private String subjects;
+    private String grade;
     private String gender;
     private LocalDate dateOfBirth;
     private String address;
@@ -53,6 +54,14 @@ public class StudentDto {
 
     public void setSubjects(String subjects) {
         this.subjects = subjects;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
     }
 
     public String getGender() {

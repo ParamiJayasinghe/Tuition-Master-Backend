@@ -29,6 +29,9 @@ public class Student {
     @Column(columnDefinition = "TEXT")
     private String subjects;
 
+    @Column(columnDefinition = "TEXT")
+    private String grade;
+
     @Column(length = 10)
     private String gender; // Male, Female, Other
 
@@ -98,6 +101,14 @@ public class Student {
 
     public void setSubjects(String subjects) {
         this.subjects = subjects;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
     }
 
     public String getGender() {

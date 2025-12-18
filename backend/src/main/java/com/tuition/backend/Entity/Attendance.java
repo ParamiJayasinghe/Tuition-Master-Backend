@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "attendance",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"class_id", "student_id", "date"}))
+       uniqueConstraints = @UniqueConstraint(columnNames = {"class_id", "student_id", "date", "subject"}))
 public class Attendance {
 
     @Id
@@ -14,7 +14,7 @@ public class Attendance {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "class_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "class_id", referencedColumnName = "id", nullable = true)
     private TuitionClass classEntity;
 
     @ManyToOne
@@ -23,6 +23,9 @@ public class Attendance {
 
     @Column(nullable = false)
     private LocalDate date;
+
+    @Column(nullable = false, length = 100)
+    private String subject;
 
     @Column(nullable = false, length = 10)
     private String status; // PRESENT, ABSENT, LATE
@@ -71,6 +74,14 @@ public class Attendance {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 
     public String getStatus() {

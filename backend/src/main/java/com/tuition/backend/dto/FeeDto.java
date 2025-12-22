@@ -1,62 +1,41 @@
-package com.tuition.backend.Entity;
+package com.tuition.backend.dto;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "fees",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "subject", "month", "year"}))
-public class Fee {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class FeeDto {
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "student_id", referencedColumnName = "id", nullable = false)
-    private Student student;
-
-    @Column(nullable = false, length = 100)
-    private String subject;
-
-    @Column(nullable = false, precision = 10, scale = 2)
+    private Long studentId;
+    private String studentName;
+    private String subject; // Now directly from Fee
+    private String grade;   // Snapshot of student grade
     private BigDecimal amount;
-
-    @Column(nullable = false)
-    private Integer month; // 1-12
-
-    @Column(nullable = false)
+    private Integer month;
     private Integer year;
-
-    @Column(name = "due_date", nullable = false)
     private LocalDate dueDate;
-
-    @Column(nullable = false, length = 20)
-    private String status = "PENDING"; // PAID, PENDING, OVERDUE
-
-    @Column(name = "paid_on")
+    private String status;
     private LocalDate paidOn;
-
-    @Column(name = "payment_method", length = 50)
     private String paymentMethod;
-
-    @Column(columnDefinition = "TEXT")
     private String notes;
 
-    @Column(length = 50)
-    private String grade;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
+    public FeeDto() {
     }
 
-    // Getters and Setters
+    public FeeDto(Long id, Long studentId, String studentName, String subject, String grade, BigDecimal amount, Integer month, Integer year, LocalDate dueDate, String status, LocalDate paidOn, String paymentMethod, String notes) {
+        this.id = id;
+        this.studentId = studentId;
+        this.studentName = studentName;
+        this.subject = subject;
+        this.grade = grade;
+        this.amount = amount;
+        this.month = month;
+        this.year = year;
+        this.dueDate = dueDate;
+        this.status = status;
+        this.paidOn = paidOn;
+        this.paymentMethod = paymentMethod;
+        this.notes = notes;
+    }
 
     public Long getId() {
         return id;
@@ -66,12 +45,20 @@ public class Fee {
         this.id = id;
     }
 
-    public Student getStudent() {
-        return student;
+    public Long getStudentId() {
+        return studentId;
     }
 
-    public void setStudent(Student student) {
-        this.student = student;
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
     }
 
     public String getSubject() {
@@ -80,6 +67,14 @@ public class Fee {
 
     public void setSubject(String subject) {
         this.subject = subject;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
     }
 
     public BigDecimal getAmount() {
@@ -145,21 +140,4 @@ public class Fee {
     public void setNotes(String notes) {
         this.notes = notes;
     }
-
-    public String getGrade() {
-        return grade;
-    }
-
-    public void setGrade(String grade) {
-        this.grade = grade;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 }
-

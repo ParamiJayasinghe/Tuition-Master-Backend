@@ -94,4 +94,3 @@ public class TuitionClass {
         this.createdAt = createdAt;
     }
 }
-

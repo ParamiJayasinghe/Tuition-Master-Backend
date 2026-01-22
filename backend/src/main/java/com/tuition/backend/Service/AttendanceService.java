@@ -30,12 +30,23 @@ public class AttendanceService {
     @Autowired
     private TeacherRepository teacherRepository;
 
+    @Autowired
+    private com.tuition.backend.Repository.userRepository userRepository;
+
     public List<AttendanceDTO> getAttendanceSheet(String grade, String subject, LocalDate date) {
         // Default date to today if not provided
         LocalDate targetDate = (date != null) ? date : LocalDate.now();
 
-        // 1. Fetch all students
-        List<Student> allStudents = studentRepository.findAll();
+        // 0. Get Logged-in Teacher
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        com.tuition.backend.Entity.User currentUser = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
+        
+        com.tuition.backend.Entity.Teacher currentTeacher = teacherRepository.findByUser(currentUser)
+                .orElseThrow(() -> new RuntimeException("Teacher profile not found for current user"));
+
+        // 1. Fetch students created by this teacher
+        List<Student> allStudents = studentRepository.findAllByCreatedBy(currentTeacher);
 
         List<Student> filteredStudents = allStudents.stream()
                 .filter(s -> {

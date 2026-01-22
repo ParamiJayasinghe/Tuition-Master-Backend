@@ -43,18 +43,18 @@ public class FeeService {
         Fee savedFee = feeRepository.save(fee);
         return mapToDto(savedFee);
     }
-    
+
     public FeeDto updateFee(Long id, FeeDto feeDto) {
         Fee fee = feeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Fee record not found"));
-        
+
         if (feeDto.getStatus() != null) fee.setStatus(feeDto.getStatus());
         if (feeDto.getPaymentMethod() != null) fee.setPaymentMethod(feeDto.getPaymentMethod());
         if (feeDto.getPaidOn() != null) fee.setPaidOn(feeDto.getPaidOn());
         if (feeDto.getNotes() != null) fee.setNotes(feeDto.getNotes());
-        
+
         // Allow updating other fields if necessary
-        
+
         Fee updatedFee = feeRepository.save(fee);
         return mapToDto(updatedFee);
     }
@@ -91,14 +91,13 @@ public class FeeService {
         };
         List<Student> students = studentRepository.findAll(studentSpec);
 
-        // 2. Fetch Existing Fees (Ignore status filter here to check existence correctly)
+        // 2. Fetch PAID Existing Fees
+        // We only care about what IS paid. Everything else is implicitly pending.
         Specification<Fee> feeSpec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            // We need fees for these students. We can filter by the same criteria as students or just check in memory.
-            // But strict filtering here helps performance.
-            // Note: Fee doesn't have "createdBy", but it links to Student.
-            // Since we iterate students, we can filter existence in memory or fetch all potential fees.
-            // Let's filter by the parameters provided.
+            
+            // Only fetch PAID ones to check against
+            predicates.add(cb.equal(root.get("status"), "PAID"));
 
             if (grade != null && !grade.isEmpty()) {
                 predicates.add(cb.equal(root.get("grade"), grade));
@@ -109,16 +108,12 @@ public class FeeService {
             if (year != null) {
                 predicates.add(cb.equal(root.get("year"), year));
             }
-            // IMPORTANT: Do NOT filter by status here. We need to know if a record exists AT ALL.
-            /* if (status != null && !status.isEmpty()) {
-                predicates.add(cb.equal(root.get("status"), status));
-            } */
             if (subject != null && !subject.isEmpty()) {
                 predicates.add(cb.like(root.get("subject"), "%" + subject + "%"));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        List<Fee> existingFees = feeRepository.findAll(feeSpec);
+        List<Fee> paidFees = feeRepository.findAll(feeSpec);
 
         // 3. Merge / Generate Virtual Fees
         List<FeeDto> result = new ArrayList<>();
@@ -134,8 +129,8 @@ public class FeeService {
                     continue;
                 }
 
-                // Check if ANY fee exists for this specific slot
-                Fee existing = existingFees.stream()
+                // Check if PAID fee exists
+                Fee paidFee = paidFees.stream()
                         .filter(f -> f.getStudent().getId().equals(s.getId()) 
                                 && f.getSubject().equalsIgnoreCase(trimmedSub)
                                 && (month == null || f.getMonth().equals(month)) 
@@ -143,16 +138,15 @@ public class FeeService {
                         .findFirst()
                         .orElse(null);
 
-                if (existing != null) {
-                     // Record exists.
-                     // NOW apply the status filter to decide if we include it.
-                     if (status == null || status.isEmpty() || existing.getStatus().equalsIgnoreCase(status)) {
-                         result.add(mapToDto(existing));
+                if (paidFee != null) {
+                     // PAID Record exists.
+                     // Filter by requested status
+                     if (status == null || status.isEmpty() || status.equalsIgnoreCase("PAID")) {
+                         result.add(mapToDto(paidFee));
                      }
                 } else {
-                    // No existing fee record.
-                    // This implies it is "PENDING".
-                    // Only include if we are looking for PENDING or ALL.
+                    // No PAID record. 
+                    // This implies "PENDING".
                     if (status == null || status.isEmpty() || "PENDING".equalsIgnoreCase(status)) {
                         FeeDto virtualFee = new FeeDto();
                         virtualFee.setStudentId(s.getId());

@@ -102,23 +102,25 @@ public class AttendanceService {
         // Prepare to return updated DTOs
         List<AttendanceDTO> result = new ArrayList<>();
 
-        // Find teacher (Marker) - in a real app, we might get ID from SecurityContext or pass it.
-        // For now, assuming teacherEmail maps to User -> Teacher or passing ID directly in DTO?
-        // Let's assume the teacher ID is passed or we look it up.
-        // If teacherEmail is provided, we can look up.
-        // Implementation Plan said "teacherEmail" argument, let's implement lookup.
-        // Since I don't have TeacherRepository.findByEmail handy (User has email), I'll skip teacher lookup for now or rely on DTO markedById.
-        // Let's rely on the first DTO having a markedById if available, or just save null for MVP to avoid complexity if Teacher logic is separate.
-        // Actually, let's try to find Teacher by DTO's markedById if present.
-
         Teacher teacher = null;
         if (!dtos.isEmpty() && dtos.get(0).getMarkedById() != null) {
             teacher = teacherRepository.findById(dtos.get(0).getMarkedById()).orElse(null);
         }
 
         for (AttendanceDTO dto : dtos) {
+            if (dto.getDate() == null) {
+                throw new IllegalArgumentException("Date is mandatory for marking attendance.");
+            }
+            if (dto.getSubject() == null || dto.getSubject().trim().isEmpty()) {
+                throw new IllegalArgumentException("Subject is mandatory for marking attendance.");
+            }
+
             Student student = studentRepository.findById(dto.getStudentId())
                     .orElseThrow(() -> new RuntimeException("Student not found: " + dto.getStudentId()));
+
+            if (student.getSubjects() == null || !student.getSubjects().contains(dto.getSubject())) {
+                throw new IllegalArgumentException("Student " + student.getFullName() + " is not registered for subject: " + dto.getSubject());
+            }
 
             Attendance attendance;
             if (dto.getId() != null) {

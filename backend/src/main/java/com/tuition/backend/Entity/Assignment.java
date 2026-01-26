@@ -1,7 +1,6 @@
 package com.tuition.backend.Entity;
 
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -13,23 +12,25 @@ public class Assignment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "class_id", referencedColumnName = "id", nullable = false)
-    private TuitionClass classEntity;
-
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false)
     private String title;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "max_marks", precision = 10, scale = 2)
-    private BigDecimal maxMarks;
+    @Column(name = "file_url")
+    private String fileUrl;
 
-    @Column(name = "due_date", nullable = false)
+    @Column(name = "due_date")
     private LocalDate dueDate;
 
-    @ManyToOne
+    @Column(nullable = false)
+    private String grade;
+
+    @Column(nullable = false)
+    private String subject;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by", referencedColumnName = "id")
     private Teacher createdBy;
 
@@ -51,14 +52,6 @@ public class Assignment {
         this.id = id;
     }
 
-    public TuitionClass getClassEntity() {
-        return classEntity;
-    }
-
-    public void setClassEntity(TuitionClass classEntity) {
-        this.classEntity = classEntity;
-    }
-
     public String getTitle() {
         return title;
     }
@@ -75,12 +68,12 @@ public class Assignment {
         this.description = description;
     }
 
-    public BigDecimal getMaxMarks() {
-        return maxMarks;
+    public String getFileUrl() {
+        return fileUrl;
     }
 
-    public void setMaxMarks(BigDecimal maxMarks) {
-        this.maxMarks = maxMarks;
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
     }
 
     public LocalDate getDueDate() {
@@ -89,6 +82,22 @@ public class Assignment {
 
     public void setDueDate(LocalDate dueDate) {
         this.dueDate = dueDate;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 
     public Teacher getCreatedBy() {
@@ -107,4 +116,3 @@ public class Assignment {
         this.createdAt = createdAt;
     }
 }
-

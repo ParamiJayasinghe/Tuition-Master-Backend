@@ -40,14 +40,34 @@ public class UserService {
 
     public User createUser(UserDto dto) {
 
+        // =========================
+        // BOOTSTRAP: First ADMIN
+        // =========================
+        boolean adminExists = userRepository.existsByRole("ADMIN");
+
+        if (!adminExists && "ADMIN".equalsIgnoreCase(dto.getRole())) {
+
+            User admin = new User();
+            admin.setUsername(dto.getUsername());
+            admin.setPassword(passwordEncoder.encode(dto.getPassword()));
+            admin.setEmail(dto.getEmail());
+            admin.setRole("ADMIN");
+            admin.setIsActive(true);
+
+            return userRepository.save(admin);
+        }
+
+        // =========================
+        // NORMAL AUTHENTICATED FLOW
+        // =========================
         String requesterRole = authService.getCurrentUserRole();
 
         // ROLE ENFORCEMENT
-        if (dto.getRole().equalsIgnoreCase("TEACHER") && !requesterRole.equals("ADMIN")) {
+        if ("TEACHER".equalsIgnoreCase(dto.getRole()) && !"ADMIN".equals(requesterRole)) {
             throw new RuntimeException("Only ADMIN can create teachers");
         }
 
-        if (dto.getRole().equalsIgnoreCase("STUDENT") && !requesterRole.equals("TEACHER")) {
+        if ("STUDENT".equalsIgnoreCase(dto.getRole()) && !"TEACHER".equals(requesterRole)) {
             throw new RuntimeException("Only TEACHER can create students");
         }
 
@@ -61,8 +81,11 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
-        // Create teacher
-        if (dto.getRole().equals("TEACHER")) {
+        // =========================
+        // Create TEACHER
+        // =========================
+        if ("TEACHER".equalsIgnoreCase(dto.getRole())) {
+
             Teacher t = new Teacher();
             t.setSubjects(dto.getTeacherDetails().getSubjects());
             t.setContactNumber(dto.getTeacherDetails().getContactNumber());
@@ -71,18 +94,22 @@ public class UserService {
             t.setTeacherId(dto.getTeacherDetails().getTeacherId());
             t.setGender(dto.getTeacherDetails().getGender());
             t.setUser(savedUser);
-            
-            // Set createdBy (Admin)
+
+            // Set createdBy (ADMIN)
             String currentUsername = authService.getCurrentUsername();
             User creator = userRepository.findByUsername(currentUsername)
                     .orElseThrow(() -> new RuntimeException("Current user not found"));
+
             t.setCreatedBy(creator);
-            
+
             teacherRepository.save(t);
         }
 
-        // Create student
-        if (dto.getRole().equals("STUDENT")) {
+        // =========================
+        // Create STUDENT
+        // =========================
+        if ("STUDENT".equalsIgnoreCase(dto.getRole())) {
+
             Student s = new Student();
             s.setContactNumber(dto.getStudentDetails().getContactNumber());
             s.setFullName(dto.getStudentDetails().getFullName());
@@ -92,27 +119,25 @@ public class UserService {
             s.setDateOfBirth(dto.getStudentDetails().getDateOfBirth());
             s.setAddress(dto.getStudentDetails().getAddress());
             s.setGender(dto.getStudentDetails().getGender());
+            s.setUser(savedUser);
+
             String currentUsername = authService.getCurrentUsername();
             User creator = userRepository.findByUsername(currentUsername)
                     .orElseThrow(() -> new RuntimeException("Current user not found"));
-            
-            // If creator is TEACHER, link the Teacher entity
-            if ("TEACHER".equalsIgnoreCase(creator.getRole())) {
-                 Teacher teacher = teacherRepository.findByUser(creator)
-                         .orElseThrow(() -> new RuntimeException("Teacher profile not found for current user"));
-                 s.setCreatedBy(teacher);
-            }
-            // If ADMIN creates student, createdBy can be null or we need logic. 
-            // Requirement says "record the user ID of the teacher who created". 
-            // If Admin creates, maybe null is fine or not applicable. 
-            // For now, only linking if creator is Teacher.
 
-            s.setUser(savedUser);
+            // Link teacher only if creator is TEACHER
+            if ("TEACHER".equalsIgnoreCase(creator.getRole())) {
+                Teacher teacher = teacherRepository.findByUser(creator)
+                        .orElseThrow(() -> new RuntimeException("Teacher profile not found for current user"));
+                s.setCreatedBy(teacher);
+            }
+
             studentRepository.save(s);
         }
 
         return savedUser;
     }
+
     // Get all users
     public List<User> getAllUsers() {
         String requesterRole = authService.getCurrentUserRole();

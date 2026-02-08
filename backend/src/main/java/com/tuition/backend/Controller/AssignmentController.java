@@ -15,7 +15,23 @@ import java.util.List;
 public class AssignmentController {
 
     @Autowired
+    private com.tuition.backend.Service.FileStorageService fileStorageService;
+
+    @Autowired
     private AssignmentService assignmentService;
+
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadFile(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        String fileName = fileStorageService.storeFile(file);
+        
+        // Return the downloadable URL
+        String fileDownloadUri = org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/uploads/")
+                .path(fileName)
+                .toUriString();
+
+        return ResponseEntity.ok(fileDownloadUri);
+    }
 
     // --- Teacher Endpoints ---
 

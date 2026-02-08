@@ -18,6 +18,11 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path uploadPath = Paths.get(uploadDir);
         String uploadAbsolutePath = uploadPath.toFile().getAbsolutePath();
+        
+        // Fix for Windows paths
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+            uploadAbsolutePath = uploadAbsolutePath.replace("\\", "/");
+        }
 
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:/" + uploadAbsolutePath + "/");

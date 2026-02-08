@@ -43,12 +43,16 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/users").permitAll()
+                .requestMatchers("/uploads/**").permitAll() // Allow access to uploaded files
                 .requestMatchers("/api/users/**").hasAnyAuthority("ADMIN", "TEACHER")
                 .requestMatchers("/api/attendance/**").hasAnyAuthority("ADMIN", "TEACHER")
                 .anyRequest().authenticated()
 
 
         );
+        
+        // Allow frames for PDF preview
+        http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
 
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

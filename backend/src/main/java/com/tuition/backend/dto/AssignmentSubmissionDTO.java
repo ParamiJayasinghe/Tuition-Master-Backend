@@ -11,11 +11,12 @@ public class AssignmentSubmissionDTO {
     private String answerText;
     private String fileUrl;
     private LocalDateTime submittedAt;
+    private Boolean isLate;
 
     // Constructors
     public AssignmentSubmissionDTO() {}
 
-    public AssignmentSubmissionDTO(Long id, Long assignmentId, String assignmentTitle, Long studentId, String studentName, String answerText, String fileUrl, LocalDateTime submittedAt) {
+    public AssignmentSubmissionDTO(Long id, Long assignmentId, String assignmentTitle, Long studentId, String studentName, String answerText, String fileUrl, LocalDateTime submittedAt, Boolean isLate) {
         this.id = id;
         this.assignmentId = assignmentId;
         this.assignmentTitle = assignmentTitle;
@@ -24,6 +25,7 @@ public class AssignmentSubmissionDTO {
         this.answerText = answerText;
         this.fileUrl = fileUrl;
         this.submittedAt = submittedAt;
+        this.isLate = isLate;
     }
 
     // Getters and Setters
@@ -51,4 +53,7 @@ public class AssignmentSubmissionDTO {
 
     public LocalDateTime getSubmittedAt() { return submittedAt; }
     public void setSubmittedAt(LocalDateTime submittedAt) { this.submittedAt = submittedAt; }
+
+    public Boolean getIsLate() { return isLate; }
+    public void setIsLate(Boolean isLate) { this.isLate = isLate; }
 }

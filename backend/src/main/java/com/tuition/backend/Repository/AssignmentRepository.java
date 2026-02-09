@@ -12,4 +12,5 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
     List<Assignment> findByCreatedBy(Teacher teacher);
     List<Assignment> findByGradeAndSubjectContaining(String grade, String subject);
     List<Assignment> findByGrade(String grade);
+    List<Assignment> findByDueDateBeforeAndIsActiveTrue(java.time.LocalDate date);
 }

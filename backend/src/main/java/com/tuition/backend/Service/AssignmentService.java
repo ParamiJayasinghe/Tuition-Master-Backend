@@ -64,6 +64,9 @@ public class AssignmentService {
         assignment.setGrade(dto.getGrade());
         assignment.setSubject(dto.getSubject()); // Single subject per assignment usually
         assignment.setCreatedBy(teacher);
+        
+        // Set isActive based on due date
+        assignment.setIsActive(!dto.getDueDate().isBefore(java.time.LocalDate.now()));
 
         Assignment saved = assignmentRepository.save(assignment);
         return mapToDTO(saved);
@@ -84,6 +87,9 @@ public class AssignmentService {
         assignment.setDueDate(dto.getDueDate());
         assignment.setGrade(dto.getGrade());
         assignment.setSubject(dto.getSubject());
+        
+        // Update isActive based on new due date
+        assignment.setIsActive(!dto.getDueDate().isBefore(java.time.LocalDate.now()));
 
         Assignment saved = assignmentRepository.save(assignment);
         return mapToDTO(saved);
@@ -159,7 +165,10 @@ public class AssignmentService {
             return teacherAssignments.stream()
                     .filter(a -> a.getGrade().equalsIgnoreCase(student.getGrade()))
                     .filter(a -> subjectList.contains(a.getSubject().toLowerCase()))
-                    .map(this::mapToDTO)
+                    .map(a -> {
+                        boolean submitted = submissionRepository.findByAssignmentAndStudent(a, student).isPresent();
+                        return mapToDTO(a, submitted);
+                    })
                     .collect(Collectors.toList());
         }
         return new ArrayList<>();
@@ -174,7 +183,26 @@ public class AssignmentService {
 
     // --- Mappers ---
 
+    public void updateAssignmentsStatus() {
+        java.time.LocalDate today = java.time.LocalDate.now();
+        List<Assignment> expiredAssignments = assignmentRepository.findByDueDateBeforeAndIsActiveTrue(today);
+        
+        for (Assignment assignment : expiredAssignments) {
+            assignment.setIsActive(false);
+            assignmentRepository.save(assignment);
+        }
+    }
+
+    // --- Mappers ---
+
     private AssignmentDTO mapToDTO(Assignment a) {
+        return mapToDTO(a, false);
+    }
+
+    private AssignmentDTO mapToDTO(Assignment a, boolean isSubmitted) {
+        // Calculate dynamic isActive status logic for the DTO
+        boolean currentActiveStatus = !a.getDueDate().isBefore(java.time.LocalDate.now());
+        
         return new AssignmentDTO(
                 a.getId(),
                 a.getTitle(),
@@ -185,11 +213,15 @@ public class AssignmentService {
                 a.getSubject(),
                 a.getCreatedBy().getFullName(),
                 a.getCreatedBy().getId(),
-                a.getCreatedAt()
+                a.getCreatedAt(),
+                currentActiveStatus, // Return calculated status
+                isSubmitted
         );
     }
 
     private AssignmentSubmissionDTO mapToSubmissionDTO(AssignmentSubmission s) {
+        boolean isLate = s.getSubmittedAt().toLocalDate().isAfter(s.getAssignment().getDueDate());
+        
         return new AssignmentSubmissionDTO(
                 s.getId(),
                 s.getAssignment().getId(),
@@ -198,7 +230,8 @@ public class AssignmentService {
                 s.getStudent().getFullName(),
                 s.getAnswerText(),
                 s.getFileUrl(),
-                s.getSubmittedAt()
+                s.getSubmittedAt(),
+                isLate
         );
     }
 }

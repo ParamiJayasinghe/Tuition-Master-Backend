@@ -14,6 +14,8 @@ public class AssignmentDTO {
     private String createdByName;
     private Long createdById;
     private LocalDateTime createdAt;
+    private Boolean isActive;
+    private Boolean isSubmitted;
 
     // Constructors
     public AssignmentDTO() {}
@@ -29,6 +31,28 @@ public class AssignmentDTO {
         this.createdByName = createdByName;
         this.createdById = createdById;
         this.createdAt = createdAt;
+        this.isActive = true; // Default or should be passed? Passed is better if mapping from entity
+    }
+
+    public AssignmentDTO(Long id, String title, String description, String fileUrl, LocalDate dueDate, String grade, String subject, String createdByName, Long createdById, LocalDateTime createdAt, Boolean isActive) {
+        this.createdAt = createdAt;
+        this.isActive = isActive;
+        this.isSubmitted = false; // Default
+    }
+
+    public AssignmentDTO(Long id, String title, String description, String fileUrl, LocalDate dueDate, String grade, String subject, String createdByName, Long createdById, LocalDateTime createdAt, Boolean isActive, Boolean isSubmitted) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.fileUrl = fileUrl;
+        this.dueDate = dueDate;
+        this.grade = grade;
+        this.subject = subject;
+        this.createdByName = createdByName;
+        this.createdById = createdById;
+        this.createdAt = createdAt;
+        this.isActive = isActive;
+        this.isSubmitted = isSubmitted;
     }
 
     // Getters and Setters
@@ -62,4 +86,10 @@ public class AssignmentDTO {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public Boolean getIsSubmitted() { return isSubmitted; }
+    public void setIsSubmitted(Boolean isSubmitted) { this.isSubmitted = isSubmitted; }
 }

@@ -38,6 +38,11 @@ public class MaterialController {
         return ResponseEntity.ok(materialService.createMaterial(dto));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<MaterialDTO> updateMaterial(@PathVariable Long id, @RequestBody MaterialDTO dto) {
+        return ResponseEntity.ok(materialService.updateMaterial(id, dto));
+    }
+
     @GetMapping
     public ResponseEntity<List<MaterialDTO>> getMaterials(
             @RequestParam(required = false) String grade,

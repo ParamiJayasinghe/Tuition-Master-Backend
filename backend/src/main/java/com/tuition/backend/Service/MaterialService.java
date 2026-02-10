@@ -95,6 +95,24 @@ public class MaterialService {
                 .collect(Collectors.toList());
     }
 
+    public MaterialDTO updateMaterial(Long id, MaterialDTO dto) {
+        Teacher teacher = getCurrentTeacher();
+        Material material = materialRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Material not found"));
+
+        if (!material.getCreatedBy().getId().equals(teacher.getId())) {
+            throw new RuntimeException("Unauthorized: specific material not created by this teacher");
+        }
+
+        material.setLessonName(dto.getLessonName());
+        material.setSubject(dto.getSubject());
+        material.setGrade(dto.getGrade());
+        material.setFileUrl(dto.getFileUrl());
+
+        Material saved = materialRepository.save(material);
+        return mapToDTO(saved);
+    }
+
     public void deleteMaterial(Long id) {
         Teacher teacher = getCurrentTeacher();
         Material material = materialRepository.findById(id)

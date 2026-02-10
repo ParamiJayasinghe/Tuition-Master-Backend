@@ -16,6 +16,7 @@ public class AssignmentDTO {
     private LocalDateTime createdAt;
     private Boolean isActive;
     private Boolean isSubmitted;
+    private String submissionFileUrl;
 
     // Constructors
     public AssignmentDTO() {}
@@ -40,7 +41,7 @@ public class AssignmentDTO {
         this.isSubmitted = false; // Default
     }
 
-    public AssignmentDTO(Long id, String title, String description, String fileUrl, LocalDate dueDate, String grade, String subject, String createdByName, Long createdById, LocalDateTime createdAt, Boolean isActive, Boolean isSubmitted) {
+    public AssignmentDTO(Long id, String title, String description, String fileUrl, LocalDate dueDate, String grade, String subject, String createdByName, Long createdById, LocalDateTime createdAt, Boolean isActive, Boolean isSubmitted, String submissionFileUrl) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -53,6 +54,7 @@ public class AssignmentDTO {
         this.createdAt = createdAt;
         this.isActive = isActive;
         this.isSubmitted = isSubmitted;
+        this.submissionFileUrl = submissionFileUrl;
     }
 
     // Getters and Setters
@@ -92,4 +94,7 @@ public class AssignmentDTO {
 
     public Boolean getIsSubmitted() { return isSubmitted; }
     public void setIsSubmitted(Boolean isSubmitted) { this.isSubmitted = isSubmitted; }
+
+    public String getSubmissionFileUrl() { return submissionFileUrl; }
+    public void setSubmissionFileUrl(String submissionFileUrl) { this.submissionFileUrl = submissionFileUrl; }
 }

@@ -166,8 +166,10 @@ public class AssignmentService {
                     .filter(a -> a.getGrade().equalsIgnoreCase(student.getGrade()))
                     .filter(a -> subjectList.contains(a.getSubject().toLowerCase()))
                     .map(a -> {
-                        boolean submitted = submissionRepository.findByAssignmentAndStudent(a, student).isPresent();
-                        return mapToDTO(a, submitted);
+                        var submission = submissionRepository.findByAssignmentAndStudent(a, student);
+                        boolean submitted = submission.isPresent();
+                        String submissionUrl = submitted ? submission.get().getFileUrl() : null;
+                        return mapToDTO(a, submitted, submissionUrl);
                     })
                     .collect(Collectors.toList());
         }
@@ -196,10 +198,10 @@ public class AssignmentService {
     // --- Mappers ---
 
     private AssignmentDTO mapToDTO(Assignment a) {
-        return mapToDTO(a, false);
+        return mapToDTO(a, false, null);
     }
 
-    private AssignmentDTO mapToDTO(Assignment a, boolean isSubmitted) {
+    private AssignmentDTO mapToDTO(Assignment a, boolean isSubmitted, String submissionFileUrl) {
         // Calculate dynamic isActive status logic for the DTO
         boolean currentActiveStatus = !a.getDueDate().isBefore(java.time.LocalDate.now());
         
@@ -215,7 +217,8 @@ public class AssignmentService {
                 a.getCreatedBy().getId(),
                 a.getCreatedAt(),
                 currentActiveStatus, // Return calculated status
-                isSubmitted
+                isSubmitted,
+                submissionFileUrl
         );
     }
 

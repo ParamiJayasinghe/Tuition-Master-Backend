@@ -3,6 +3,7 @@ package com.tuition.backend.Service;
 import com.tuition.backend.Entity.Attendance;
 import com.tuition.backend.Entity.Student;
 import com.tuition.backend.Entity.Teacher;
+import com.tuition.backend.Entity.User;
 import com.tuition.backend.Repository.AttendanceRepository;
 import com.tuition.backend.Repository.StudentRepository;
 import com.tuition.backend.Repository.TeacherRepository;
@@ -145,5 +146,40 @@ public class AttendanceService {
             result.add(dto);
         }
         return result;
+    }
+
+    public List<AttendanceDTO> getStudentAttendance() {
+        // 0. Get Logged-in User
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+        // 1. Get Student profile from User link
+        Student student = currentUser.getStudentDetails();
+        if (student == null) {
+            throw new RuntimeException("Student profile not found for current user: " + auth.getName());
+        }
+
+        // 2. Fetch attendance records for this student
+        List<Attendance> attendanceRecords = attendanceRepository.findByStudent(student);
+
+        // 3. Map to DTOs
+        return attendanceRecords.stream()
+                .map(a -> {
+                    AttendanceDTO dto = new AttendanceDTO();
+                    dto.setId(a.getId());
+                    dto.setStudentId(student.getId());
+                    dto.setStudentName(student.getFullName());
+                    dto.setContactNumber(student.getContactNumber());
+                    dto.setGrade(student.getGrade());
+                    dto.setSubject(a.getSubject());
+                    dto.setDate(a.getDate());
+                    dto.setStatus(a.getStatus());
+                    if (a.getMarkedBy() != null) {
+                        dto.setMarkedById(a.getMarkedBy().getId());
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 }

@@ -19,6 +19,7 @@ public class AttendanceController {
     private AttendanceService attendanceService;
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('ADMIN', 'TEACHER')")
     public ResponseEntity<List<AttendanceDTO>> getAttendanceSheet(
             @RequestParam(required = false) String grade,
             @RequestParam(required = false) String subject,
@@ -29,11 +30,19 @@ public class AttendanceController {
     }
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('ADMIN', 'TEACHER')")
     public ResponseEntity<List<AttendanceDTO>> markAttendance(
             @RequestBody List<AttendanceDTO> attendanceDtos,
             @RequestParam(required = false) String teacherEmail // Optional if we want to track who marked it via param
     ) {
         List<AttendanceDTO> saved = attendanceService.markAttendance(attendanceDtos, teacherEmail);
         return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/my-attendance")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('ADMIN', 'TEACHER', 'STUDENT')")
+    public ResponseEntity<List<AttendanceDTO>> getMyAttendance() {
+        List<AttendanceDTO> attendance = attendanceService.getStudentAttendance();
+        return ResponseEntity.ok(attendance);
     }
 }

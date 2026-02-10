@@ -45,7 +45,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/users").permitAll()
                 .requestMatchers("/uploads/**").permitAll() // Allow access to uploaded files
                 .requestMatchers("/api/users/**").hasAnyAuthority("ADMIN", "TEACHER")
-                .requestMatchers("/api/attendance/**").hasAnyAuthority("ADMIN", "TEACHER")
                 .anyRequest().authenticated()
 
 

@@ -2,8 +2,10 @@ package com.tuition.backend.Service;
 
 import com.tuition.backend.Entity.AssignmentSubmission;
 import com.tuition.backend.Entity.Student;
+import com.tuition.backend.Entity.User;
 import com.tuition.backend.Repository.AssignmentSubmissionRepository;
 import com.tuition.backend.Repository.StudentRepository;
+import com.tuition.backend.Repository.userRepository;
 import com.tuition.backend.dto.AssignmentSubmissionDTO;
 import com.tuition.backend.dto.StudentPerformanceDTO;
 import com.tuition.backend.dto.SubjectPerformanceDTO;
@@ -19,14 +21,20 @@ import java.util.stream.Collectors;
 public class PerformanceService {
 
     @Autowired
+    private userRepository userRepository;
+
+    @Autowired
     private StudentRepository studentRepository;
 
     @Autowired
     private AssignmentSubmissionRepository submissionRepository;
 
-    public StudentPerformanceDTO getStudentPerformance(Long studentId) {
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+    public StudentPerformanceDTO getStudentPerformance(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Student student = studentRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Student details not found for user: " + userId));
 
         List<AssignmentSubmission> submissions = submissionRepository.findByStudent(student);
 

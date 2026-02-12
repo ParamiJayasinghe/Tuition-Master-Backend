@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "questions")
+@Table(name = "qna_questions")
 public class Question {
 
     @Id
@@ -12,31 +12,33 @@ public class Question {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "student_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
     @ManyToOne
-    @JoinColumn(name = "class_id", referencedColumnName = "id", nullable = false)
-    private TuitionClass classEntity;
+    @JoinColumn(name = "teacher_id", nullable = false)
+    private Teacher teacher;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String question;
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String questionText;
+
+    @Column(name = "question_file_url")
+    private String questionFileUrl;
 
     @Column(columnDefinition = "TEXT")
-    private String answer;
+    private String answerText;
+
+    @Column(name = "answer_file_url")
+    private String answerFileUrl;
 
     @Column(nullable = false, length = 20)
     private String status = "PENDING"; // PENDING, ANSWERED
 
-    @Column(name = "asked_at", nullable = false, updatable = false)
+    @Column(name = "asked_at", nullable = false)
     private LocalDateTime askedAt;
 
     @Column(name = "answered_at")
     private LocalDateTime answeredAt;
-
-    @ManyToOne
-    @JoinColumn(name = "answered_by", referencedColumnName = "id")
-    private Teacher answeredBy;
 
     @PrePersist
     protected void onCreate() {
@@ -44,77 +46,34 @@ public class Question {
     }
 
     // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Long getId() {
-        return id;
-    }
+    public Student getStudent() { return student; }
+    public void setStudent(Student student) { this.student = student; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Teacher getTeacher() { return teacher; }
+    public void setTeacher(Teacher teacher) { this.teacher = teacher; }
 
-    public Student getStudent() {
-        return student;
-    }
+    public String getQuestionText() { return questionText; }
+    public void setQuestionText(String questionText) { this.questionText = questionText; }
 
-    public void setStudent(Student student) {
-        this.student = student;
-    }
+    public String getQuestionFileUrl() { return questionFileUrl; }
+    public void setQuestionFileUrl(String questionFileUrl) { this.questionFileUrl = questionFileUrl; }
 
-    public TuitionClass getClassEntity() {
-        return classEntity;
-    }
+    public String getAnswerText() { return answerText; }
+    public void setAnswerText(String answerText) { this.answerText = answerText; }
 
-    public void setClassEntity(TuitionClass classEntity) {
-        this.classEntity = classEntity;
-    }
+    public String getAnswerFileUrl() { return answerFileUrl; }
+    public void setAnswerFileUrl(String answerFileUrl) { this.answerFileUrl = answerFileUrl; }
 
-    public String getQuestion() {
-        return question;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public void setQuestion(String question) {
-        this.question = question;
-    }
+    public LocalDateTime getAskedAt() { return askedAt; }
+    public void setAskedAt(LocalDateTime askedAt) { this.askedAt = askedAt; }
 
-    public String getAnswer() {
-        return answer;
-    }
-
-    public void setAnswer(String answer) {
-        this.answer = answer;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getAskedAt() {
-        return askedAt;
-    }
-
-    public void setAskedAt(LocalDateTime askedAt) {
-        this.askedAt = askedAt;
-    }
-
-    public LocalDateTime getAnsweredAt() {
-        return answeredAt;
-    }
-
-    public void setAnsweredAt(LocalDateTime answeredAt) {
-        this.answeredAt = answeredAt;
-    }
-
-    public Teacher getAnsweredBy() {
-        return answeredBy;
-    }
-
-    public void setAnsweredBy(Teacher answeredBy) {
-        this.answeredBy = answeredBy;
-    }
+    public LocalDateTime getAnsweredAt() { return answeredAt; }
+    public void setAnsweredAt(LocalDateTime answeredAt) { this.answeredAt = answeredAt; }
 }
 

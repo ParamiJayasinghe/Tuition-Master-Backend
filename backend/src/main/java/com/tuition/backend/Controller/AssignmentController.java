@@ -56,6 +56,13 @@ public class AssignmentController {
         return ResponseEntity.ok(assignmentService.getSubmissionsForAssignment(id));
     }
 
+    @PutMapping("/submissions/{submissionId}/mark")
+    public ResponseEntity<AssignmentSubmissionDTO> markSubmission(
+            @PathVariable Long submissionId,
+            @RequestParam Integer marks) {
+        return ResponseEntity.ok(assignmentService.markSubmission(submissionId, marks));
+    }
+
     // --- Student Endpoints ---
 
     @PostMapping("/{id}/submit")

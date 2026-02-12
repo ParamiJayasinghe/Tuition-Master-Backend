@@ -139,6 +139,22 @@ public class AssignmentService {
         return mapToSubmissionDTO(saved);
     }
 
+    public AssignmentSubmissionDTO markSubmission(Long submissionId, Integer marks) {
+        Teacher teacher = getCurrentTeacher();
+        AssignmentSubmission submission = submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new RuntimeException("Submission not found"));
+
+        if (!submission.getAssignment().getCreatedBy().getId().equals(teacher.getId())) {
+            throw new RuntimeException("Unauthorized: submission for an assignment not created by this teacher");
+        }
+
+        submission.setMarks(marks);
+        submission.setIsMarked(true);
+
+        AssignmentSubmission saved = submissionRepository.save(submission);
+        return mapToSubmissionDTO(saved);
+    }
+
     // --- Shared / Context Aware ---
 
     public List<AssignmentDTO> getAssignments() {
@@ -169,7 +185,9 @@ public class AssignmentService {
                         var submission = submissionRepository.findByAssignmentAndStudent(a, student);
                         boolean submitted = submission.isPresent();
                         String submissionUrl = submitted ? submission.get().getFileUrl() : null;
-                        return mapToDTO(a, submitted, submissionUrl);
+                        Integer marks = submitted ? submission.get().getMarks() : null;
+                        boolean marked = submitted && Boolean.TRUE.equals(submission.get().getIsMarked());
+                        return mapToDTO(a, submitted, submissionUrl, marks, marked);
                     })
                     .collect(Collectors.toList());
         }
@@ -198,10 +216,10 @@ public class AssignmentService {
     // --- Mappers ---
 
     private AssignmentDTO mapToDTO(Assignment a) {
-        return mapToDTO(a, false, null);
+        return mapToDTO(a, false, null, null, false);
     }
 
-    private AssignmentDTO mapToDTO(Assignment a, boolean isSubmitted, String submissionFileUrl) {
+    private AssignmentDTO mapToDTO(Assignment a, boolean isSubmitted, String submissionFileUrl, Integer marks, boolean isMarked) {
         // Calculate dynamic isActive status logic for the DTO
         boolean currentActiveStatus = !a.getDueDate().isBefore(java.time.LocalDate.now());
         
@@ -218,7 +236,9 @@ public class AssignmentService {
                 a.getCreatedAt(),
                 currentActiveStatus, // Return calculated status
                 isSubmitted,
-                submissionFileUrl
+                submissionFileUrl,
+                marks,
+                isMarked
         );
     }
 
@@ -234,7 +254,9 @@ public class AssignmentService {
                 s.getAnswerText(),
                 s.getFileUrl(),
                 s.getSubmittedAt(),
-                isLate
+                isLate,
+                s.getMarks(),
+                s.getIsMarked()
         );
     }
 }

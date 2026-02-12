@@ -28,6 +28,11 @@ public class AssignmentSubmission {
     @Column(name = "submitted_at", nullable = false)
     private LocalDateTime submittedAt;
 
+    private Integer marks;
+
+    @Column(name = "is_marked", nullable = true)
+    private Boolean isMarked = false;
+
     @PrePersist
     protected void onCreate() {
         submittedAt = LocalDateTime.now();
@@ -81,5 +86,21 @@ public class AssignmentSubmission {
 
     public void setSubmittedAt(LocalDateTime submittedAt) {
         this.submittedAt = submittedAt;
+    }
+
+    public Integer getMarks() {
+        return marks;
+    }
+
+    public void setMarks(Integer marks) {
+        this.marks = marks;
+    }
+
+    public Boolean getIsMarked() {
+        return isMarked;
+    }
+
+    public void setIsMarked(Boolean isMarked) {
+        this.isMarked = isMarked;
     }
 }

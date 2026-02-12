@@ -16,6 +16,11 @@ public class PerformanceController {
     @Autowired
     private PerformanceService performanceService;
 
+    @GetMapping("/me")
+    public ResponseEntity<StudentPerformanceDTO> getMyPerformance(java.security.Principal principal) {
+        return ResponseEntity.ok(performanceService.getMyPerformance(principal.getName()));
+    }
+
     @GetMapping("/student/{userId}")
     public ResponseEntity<StudentPerformanceDTO> getStudentPerformance(@PathVariable Long userId) {
         return ResponseEntity.ok(performanceService.getStudentPerformance(userId));

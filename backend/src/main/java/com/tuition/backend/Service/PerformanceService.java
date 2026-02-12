@@ -29,6 +29,12 @@ public class PerformanceService {
     @Autowired
     private AssignmentSubmissionRepository submissionRepository;
 
+    public StudentPerformanceDTO getMyPerformance(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        return getStudentPerformance(user.getId());
+    }
+
     public StudentPerformanceDTO getStudentPerformance(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));

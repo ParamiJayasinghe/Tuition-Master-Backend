@@ -167,6 +167,94 @@ public class FeeService {
         return result;
     }
 
+    public List<FeeDto> getMyFees() {
+        // 0. Get Logged-in Student
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        com.tuition.backend.Entity.User currentUser = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+        Student currentStudent = studentRepository.findByUser(currentUser)
+                .orElseThrow(() -> new RuntimeException("Student profile not found for current user"));
+
+        // 1. Fetch ALL PAID Fees for this student
+        List<Fee> paidFees = feeRepository.findByStudent(currentStudent);
+        
+        // 2. Determine subjects
+        String[] subjects = currentStudent.getSubjects() != null ? currentStudent.getSubjects().split(",") : new String[0];
+        
+        List<FeeDto> result = new ArrayList<>();
+        int currentYear = java.time.LocalDate.now().getYear();
+        int currentMonth = java.time.LocalDate.now().getMonthValue();
+
+        // 3. Generate Fee Records (Paid + Pending) for the current year
+        // Strategy: Iterate through months (1 to 12) for each subject
+        // If a paid record exists, use it. If not, create a virtual pending record (if month <= currentMonth + 1 ?)
+        // Use a simple logic: Show all months for the current year. PENDING if not paid.
+        
+        for (String subject : subjects) {
+            String trimmedSubject = subject.trim();
+            if (trimmedSubject.isEmpty()) continue;
+
+            for (int month = 1; month <= 12; month++) {
+                // Check if paid fee exists for this subject, month, year
+                final int m = month;
+                Fee paidFee = paidFees.stream()
+                        .filter(f -> f.getSubject().equalsIgnoreCase(trimmedSubject)
+                                && f.getMonth() == m
+                                && f.getYear() == currentYear)
+                        .findFirst()
+                        .orElse(null);
+
+                if (paidFee != null) {
+                    result.add(mapToDto(paidFee));
+                } else {
+                    // Create Virtual Pending Fee
+                    // Optionally, only show pending up to current month? 
+                    // Let's show all months but mark future ones as "UPCOMING"? 
+                    // Requirement says "amount to be paid", usually implies past/current due.
+                    // Let's mark past months as PENDING (Overdue logic handled in frontend?), future as UPCOMING?
+                    // For simplicity, let's call everything not paid as PENDING for now, or distinguish based on month.
+                    
+                    String status = "PENDING";
+                    if (month > currentMonth) {
+                         status = "UPCOMING";
+                    }
+
+                    FeeDto virtualFee = new FeeDto();
+                    virtualFee.setStudentId(currentStudent.getId());
+                    virtualFee.setStudentName(currentStudent.getFullName());
+                    virtualFee.setSubject(trimmedSubject);
+                    virtualFee.setGrade(currentStudent.getGrade());
+                    virtualFee.setMonth(month);
+                    virtualFee.setYear(currentYear);
+                    virtualFee.setStatus(status);
+                    virtualFee.setAmount(java.math.BigDecimal.ZERO); // Or fetch class fee amount if we had a setup for it
+                    
+                    result.add(virtualFee);
+                }
+            }
+        }
+        
+        // Add any paid fees from previous years if desired? 
+        // For now, let's include all historical PAID fees too, even if not in current year loop above?
+        // The loop above covers current year. 
+        // Let's just add any paid fees that are NOT in the current year to the result as well.
+        for (Fee fee : paidFees) {
+            if (fee.getYear() != currentYear) {
+                result.add(mapToDto(fee));
+            }
+        }
+
+        // Sort: Latest year, Latest month
+        result.sort((a, b) -> {
+            int yearCompare = b.getYear().compareTo(a.getYear());
+            if (yearCompare != 0) return yearCompare;
+            return b.getMonth().compareTo(a.getMonth());
+        });
+
+        return result;
+    }
+
     private FeeDto mapToDto(Fee fee) {
         return new FeeDto(
                 fee.getId(),

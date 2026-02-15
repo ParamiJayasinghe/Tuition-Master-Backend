@@ -38,4 +38,9 @@ public class FeeController {
         List<FeeDto> fees = feeService.getFees(grade, month, year, status, subject);
         return ResponseEntity.ok(fees);
     }
+
+    @GetMapping("/my-fees")
+    public ResponseEntity<List<FeeDto>> getMyFees() {
+        return ResponseEntity.ok(feeService.getMyFees());
+    }
 }

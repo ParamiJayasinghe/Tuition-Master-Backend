@@ -33,21 +33,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http.csrf(cs -> cs.disable());
+        http.csrf(csrf -> csrf.disable());
+
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         http.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // Enable CORS
-        http.cors();
-
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/users").permitAll()
-                .requestMatchers("/uploads/**").permitAll() // Allow access to uploaded files
+                .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/api/users/**").hasAnyAuthority("ADMIN", "TEACHER")
                 .anyRequest().authenticated()
-
-
         );
         
         // Allow frames for PDF preview

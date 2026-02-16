@@ -23,6 +23,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JwtAuthFilter.class);
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -30,7 +32,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
-
+        
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -49,14 +51,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     userDetails,
                                     null,
                                     userDetails.getAuthorities()
-                            );
+                                    );
 
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    logger.debug("Successfully authenticated user: {}", username);
+                } else {
+                    logger.warn("JWT Token is invalid or expired");
                 }
             }
         } catch (Exception e) {
-            // Log error or ignore invalid token to allow downstream filters to handle 403
-            System.out.println("JWT Verification Failed: " + e.getMessage());
+            logger.error("JWT Verification Failed: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);

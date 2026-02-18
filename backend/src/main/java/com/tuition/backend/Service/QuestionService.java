@@ -9,8 +9,10 @@ import com.tuition.backend.Repository.StudentRepository;
 import com.tuition.backend.Repository.TeacherRepository;
 import com.tuition.backend.Repository.userRepository;
 import com.tuition.backend.dto.QuestionDTO;
+import com.tuition.backend.Entity.NotificationType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.tuition.backend.Service.NotificationService;
 
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -32,6 +34,9 @@ public class QuestionService {
     @Autowired
     private userRepository userRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @Transactional
     public QuestionDTO askQuestion(String username, Long teacherId, String text, String fileUrl) {
         User user = userRepository.findByUsername(username)
@@ -51,7 +56,17 @@ public class QuestionService {
         question.setQuestionFileUrl((fileUrl != null && !fileUrl.isEmpty()) ? fileUrl : null);
         question.setStatus("PENDING");
 
-        return mapToDTO(questionRepository.save(question));
+        Question savedQuestion = questionRepository.save(question);
+
+        // Send notification to teacher
+        notificationService.createNotification(
+                teacher.getUser(),
+                NotificationType.QUESTION_ASKED,
+                "New Question from " + student.getFullName(),
+                student.getFullName() + " has asked a new question: " + text
+        );
+
+        return mapToDTO(savedQuestion);
     }
 
     @Transactional
@@ -64,7 +79,17 @@ public class QuestionService {
         question.setAnsweredAt(LocalDateTime.now());
         question.setStatus("ANSWERED");
 
-        return mapToDTO(questionRepository.save(question));
+        Question savedQuestion = questionRepository.save(question);
+
+        // Send notification to student
+        notificationService.createNotification(
+                question.getStudent().getUser(),
+                NotificationType.ANSWER_RECEIVED,
+                "New Answer from Teacher",
+                question.getTeacher().getFullName() + " has answered your question: " + text
+        );
+
+        return mapToDTO(savedQuestion);
     }
 
     public List<QuestionDTO> getStudentQuestions(String username) {

@@ -29,4 +29,6 @@ public interface FeeRepository extends JpaRepository<Fee, Long>, JpaSpecificatio
     List<Fee> findByStudentAndMonthAndYear(Student student, Integer month, Integer year);
     
     List<Fee> findBySubject(String subject);
+
+    boolean existsByStudentAndSubjectAndMonthAndYearAndStatus(Student student, String subject, Integer month, Integer year, String status);
 }

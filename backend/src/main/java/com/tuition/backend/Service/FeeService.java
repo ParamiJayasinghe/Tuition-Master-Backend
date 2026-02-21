@@ -4,11 +4,13 @@ import com.tuition.backend.Entity.Fee;
 import com.tuition.backend.Entity.Student;
 import com.tuition.backend.Repository.FeeRepository;
 import com.tuition.backend.Repository.StudentRepository;
+import com.tuition.backend.config.AuditLog;
 import com.tuition.backend.dto.FeeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +25,8 @@ public class FeeService {
     @Autowired
     private StudentRepository studentRepository;
 
+    @Transactional
+    @AuditLog(action = "CREATE_FEE", targetType = "Fee")
     public FeeDto createFee(FeeDto feeDto) {
         Student student = studentRepository.findById(feeDto.getStudentId())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -44,6 +48,8 @@ public class FeeService {
         return mapToDto(savedFee);
     }
 
+    @Transactional
+    @AuditLog(action = "UPDATE_FEE", targetType = "Fee")
     public FeeDto updateFee(Long id, FeeDto feeDto) {
         Fee fee = feeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Fee record not found"));

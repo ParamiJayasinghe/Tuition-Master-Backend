@@ -10,6 +10,7 @@ import com.tuition.backend.Repository.TeacherRepository;
 import com.tuition.backend.Repository.userRepository;
 import com.tuition.backend.dto.QuestionDTO;
 import com.tuition.backend.Entity.NotificationType;
+import com.tuition.backend.config.AuditLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.tuition.backend.Service.NotificationService;
@@ -70,6 +71,7 @@ public class QuestionService {
     }
 
     @Transactional
+    @AuditLog(action = "ANSWER_QUESTION", targetType = "Question")
     public QuestionDTO answerQuestion(Long questionId, String text, String fileUrl) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));

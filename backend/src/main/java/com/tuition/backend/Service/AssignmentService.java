@@ -4,6 +4,7 @@ import com.tuition.backend.Entity.*;
 import com.tuition.backend.Repository.*;
 import com.tuition.backend.dto.AssignmentDTO;
 import com.tuition.backend.dto.AssignmentSubmissionDTO;
+import com.tuition.backend.config.AuditLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,8 @@ public class AssignmentService {
 
     // --- Teacher Operations ---
 
+    @Transactional
+    @AuditLog(action = "CREATE_ASSIGNMENT", targetType = "Assignment")
     public AssignmentDTO createAssignment(AssignmentDTO dto) {
         Teacher teacher = getCurrentTeacher();
 
@@ -72,6 +75,8 @@ public class AssignmentService {
         return mapToDTO(saved);
     }
 
+    @Transactional
+    @AuditLog(action = "UPDATE_ASSIGNMENT", targetType = "Assignment")
     public AssignmentDTO updateAssignment(Long id, AssignmentDTO dto) {
         Teacher teacher = getCurrentTeacher();
         Assignment assignment = assignmentRepository.findById(id)
@@ -95,6 +100,8 @@ public class AssignmentService {
         return mapToDTO(saved);
     }
 
+    @Transactional
+    @AuditLog(action = "DELETE_ASSIGNMENT", targetType = "Assignment")
     public void deleteAssignment(Long id) {
         Teacher teacher = getCurrentTeacher();
         Assignment assignment = assignmentRepository.findById(id)
@@ -139,6 +146,8 @@ public class AssignmentService {
         return mapToSubmissionDTO(saved);
     }
 
+    @Transactional
+    @AuditLog(action = "MARK_SUBMISSION", targetType = "Submission")
     public AssignmentSubmissionDTO markSubmission(Long submissionId, Integer marks) {
         Teacher teacher = getCurrentTeacher();
         AssignmentSubmission submission = submissionRepository.findById(submissionId)

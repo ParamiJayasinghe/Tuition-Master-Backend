@@ -7,6 +7,7 @@ import com.tuition.backend.Entity.User;
 import com.tuition.backend.Repository.AttendanceRepository;
 import com.tuition.backend.Repository.StudentRepository;
 import com.tuition.backend.Repository.TeacherRepository;
+import com.tuition.backend.config.AuditLog;
 import com.tuition.backend.dto.AttendanceDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -99,6 +100,7 @@ public class AttendanceService {
     }
 
     @Transactional
+    @AuditLog(action = "MARK_ATTENDANCE", targetType = "Attendance")
     public List<AttendanceDTO> markAttendance(List<AttendanceDTO> dtos, String teacherEmail) {
         // Prepare to return updated DTOs
         List<AttendanceDTO> result = new ArrayList<>();

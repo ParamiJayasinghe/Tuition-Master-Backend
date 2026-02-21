@@ -8,6 +8,7 @@ import com.tuition.backend.Repository.MaterialRepository;
 import com.tuition.backend.Repository.StudentRepository;
 import com.tuition.backend.Repository.TeacherRepository;
 import com.tuition.backend.Repository.userRepository;
+import com.tuition.backend.config.AuditLog;
 import com.tuition.backend.dto.MaterialDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -45,6 +46,7 @@ public class MaterialService {
                 .orElseThrow(() -> new RuntimeException("Teacher profile not found"));
     }
 
+    @AuditLog(action = "CREATE_MATERIAL", targetType = "Material")
     public MaterialDTO createMaterial(MaterialDTO dto) {
         Teacher teacher = getCurrentTeacher();
 
@@ -95,6 +97,7 @@ public class MaterialService {
                 .collect(Collectors.toList());
     }
 
+    @AuditLog(action = "UPDATE_MATERIAL", targetType = "Material")
     public MaterialDTO updateMaterial(Long id, MaterialDTO dto) {
         Teacher teacher = getCurrentTeacher();
         Material material = materialRepository.findById(id)
@@ -113,6 +116,7 @@ public class MaterialService {
         return mapToDTO(saved);
     }
 
+    @AuditLog(action = "DELETE_MATERIAL", targetType = "Material")
     public void deleteMaterial(Long id) {
         Teacher teacher = getCurrentTeacher();
         Material material = materialRepository.findById(id)

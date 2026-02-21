@@ -8,6 +8,7 @@ import com.tuition.backend.Repository.TeacherRepository;
 import com.tuition.backend.Repository.StudentRepository;
 import com.tuition.backend.Service.AuthService;
 import com.tuition.backend.dto.UserDto;
+import com.tuition.backend.config.AuditLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,7 @@ public class UserService {
     private AuthService authService;
 
     @Transactional
-
+    @AuditLog(action = "CREATE_USER", targetType = "User")
     public User createUser(UserDto dto) {
 
         // =========================
@@ -173,6 +174,7 @@ public class UserService {
 
     // Update user
     @Transactional
+    @AuditLog(action = "UPDATE_USER", targetType = "User")
     public User updateUser(Long id, UserDto userDTO) {
         User existing = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -273,6 +275,7 @@ public class UserService {
 
     // Delete user (hard delete)
     @Transactional
+    @AuditLog(action = "DELETE_USER", targetType = "User")
     public void deleteUser(Long id) {
         User existing = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));

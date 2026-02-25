@@ -28,4 +28,16 @@ public class AuditLogController {
             return ResponseEntity.status(500).body("Error fetching logs: " + e.getMessage());
         }
     }
+
+    @GetMapping("/my-logs")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'TEACHER', 'STUDENT')")
+    public ResponseEntity<?> getMyLogs(org.springframework.security.core.Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            return ResponseEntity.ok(auditLogService.getLogsByUsername(username));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error fetching your logs: " + e.getMessage());
+        }
+    }
 }

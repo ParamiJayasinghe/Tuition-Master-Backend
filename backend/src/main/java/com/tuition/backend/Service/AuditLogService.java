@@ -46,6 +46,18 @@ public class AuditLogService {
                 .collect(Collectors.toList());
     }
 
+    public List<AuditLogDTO> getLogsByUsername(String username) {
+        return auditLogRepository.findByActorUsername(username).stream()
+                .map(this::mapToDTO)
+                .sorted((a, b) -> {
+                    if (a.getTimestamp() == null && b.getTimestamp() == null) return 0;
+                    if (a.getTimestamp() == null) return 1;
+                    if (b.getTimestamp() == null) return -1;
+                    return b.getTimestamp().compareTo(a.getTimestamp());
+                })
+                .collect(Collectors.toList());
+    }
+
     private AuditLogDTO mapToDTO(AuditLog log) {
         String formattedDate = null;
         if (log.getCreatedAt() != null) {

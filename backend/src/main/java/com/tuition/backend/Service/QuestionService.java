@@ -39,6 +39,7 @@ public class QuestionService {
     private NotificationService notificationService;
 
     @Transactional
+    @AuditLog(action = "ASK_QUESTION", targetType = "Teacher")
     public QuestionDTO askQuestion(String username, Long teacherId, String text, String fileUrl) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found: " + username));

@@ -128,6 +128,7 @@ public class AssignmentService {
 
     // --- Student Operations ---
 
+    @AuditLog(action = "SUBMIT_ASSIGNMENT", targetType = "Assignment")
     public AssignmentSubmissionDTO submitAssignment(Long assignmentId, AssignmentSubmissionDTO dto) {
         Student student = getCurrentStudent();
         Assignment assignment = assignmentRepository.findById(assignmentId)
